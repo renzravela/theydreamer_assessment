@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import { useLoadScript } from "@react-google-maps/api";
 import { saveCoords } from "./api";
+import Map from "./components/Map";
 
 const defaultCenter = { lat: 14.5547, lng: 121.0449 }; // Default coords of West Rembo, Makati City
 
@@ -21,6 +22,9 @@ const App = () => {
     lng: number;
   }>(defaultCenter);
   const [message, setMessage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isMessageVisible, setIsMessageVisible] = useState<boolean>(false);
+  const [isErrorVisible, setIsErrorVisible] = useState<boolean>(false);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: "AIzaSyCKwIhOiRGBl6m1wFE5KE8aB6WokyV6Nso",
@@ -44,8 +48,11 @@ const App = () => {
         convertedLng: convertedLng,
       });
       setMarkerPosition({ lat: parseFloat(lat), lng: parseFloat(lng) });
+      setErrorMessage("");
     } else {
-      alert("Please enter valid latitude and longitude.");
+      setErrorMessage("Please enter valid latitude and longitude.");
+      setIsErrorVisible(true);
+      setTimeout(() => setIsErrorVisible(false), 3000);
     }
   };
 
@@ -55,85 +62,88 @@ const App = () => {
       convertedCoords.convertedLng === ""
     ) {
       setMessage("Coordinate empty; please convert first and then save.");
+      setIsMessageVisible(true);
+      setTimeout(() => setIsMessageVisible(false), 3000);
     } else {
       try {
         const latitude = convertedCoords.convertedLat;
         const longitude = convertedCoords.convertedLng;
         const response = await saveCoords({ lat: latitude, lng: longitude });
         setMessage(response.message);
+        setIsMessageVisible(true);
+        setTimeout(() => setIsMessageVisible(false), 3000);
       } catch (error) {
         setMessage(
           error instanceof Error ? error.message : "An unknown error occurred."
         );
+        setIsMessageVisible(true);
+        setTimeout(() => setIsMessageVisible(false), 3000);
       }
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50">
-      <h1 className="text-3xl font-bold mb-6">Coordinate Converter</h1>
-      <div className="bg-white shadow-md rounded-lg p-6 w-80">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Latitude (DD):
-          </label>
-          <input
-            title="latitude"
-            placeholder="Enter the latitude"
-            type="number"
-            value={lat}
-            onChange={(e) => setLat(e.target.value)}
-            className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Longitude (DD):
-          </label>
-          <input
-            title="longitude"
-            placeholder="Enter the longitude"
-            type="number"
-            value={lng}
-            onChange={(e) => setLng(e.target.value)}
-            className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-          />
-        </div>
-
-        <button
-          onClick={handleConvert}
-          className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300"
-        >
-          Convert Coords
-        </button>
-
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold">
-            Converted Coordinates (DMS):
-          </h2>
-          <p>{`Latitude: ${convertedCoords.convertedLat}, Longitude: ${convertedCoords.convertedLng}`}</p>
-        </div>
-
-        <button
-          onClick={saveCoordsToDB}
-          className="mt-4 w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300"
-        >
-          Save Coords to DB
-        </button>
-
-        {message && <p className="mt-2 text-red-600">{message}</p>}
-
-        {isLoaded && (
-          <div className="mt-4">
-            <GoogleMap
-              mapContainerStyle={{ width: "100%", height: "300px" }}
-              zoom={12}
-              center={markerPosition}
-            >
-              <Marker position={markerPosition} />
-            </GoogleMap>
+    <div className="bg-container flex flex-1 flex-col items-center justify-center min-h-screen bg-blue-50">
+      <h1 className="text-3xl font-bold mb-2">Coordinates Converter</h1>
+      <div className="p-6 w-2/4 flex flex-col">
+        <div className="bg-white w-1/2 self-center p-6 shadow-md rounded-lg">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Latitude (DD):
+            </label>
+            <input
+              title="latitude"
+              placeholder="Ex. 15.3072"
+              type="number"
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              className="mt-1 p-2 border border-gray-300 rounded-md w-full"
+            />
           </div>
-        )}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Longitude (DD):
+            </label>
+            <input
+              title="longitude"
+              placeholder="Ex. 120.9464"
+              type="number"
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+              className="mt-1 p-2 border border-gray-300 rounded-md w-full"
+            />
+          </div>
+          {isErrorVisible && (
+            <p className={`text-red-600 text-center transition-opacity duration-300 ${isErrorVisible ? "opacity-100" : "opacity-0"}`}>
+              {errorMessage}
+            </p>
+          )}
+          <button
+            onClick={handleConvert}
+            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300"
+          >
+            Convert Coords
+          </button>
+          <div className="mt-4">
+            <h2 className="text-lg font-semibold">
+              Converted Coordinates (DMS):
+            </h2>
+            <p>{`Latitude: ${convertedCoords.convertedLat}, Longitude: ${convertedCoords.convertedLng}`}</p>
+          </div>
+          <button
+            onClick={saveCoordsToDB}
+            className="mt-4 w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300"
+          >
+            Save Coordinates
+          </button>
+          {isMessageVisible && message && (
+            <p className={`mt-2 mb-5 text-slate-600 text-center transition-opacity duration-300 ${isMessageVisible ? "opacity-100" : "opacity-0"}`}>
+              {message}
+            </p>
+          )}
+        </div>
+
+        {isLoaded && <Map markerPosition={markerPosition} />}
       </div>
     </div>
   );
