@@ -1,6 +1,7 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
+require('dotenv').config({ path: './config.env' });
 
-const URI = 'mongodb+srv://renz:zrSx9TiiUz73eW8U@cluster0.i1zg8zf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'; //this should be on env but for the sake of this assessment I will leave it here.
+const URI = process.env.ATLAS_URI;
 
 const client = new MongoClient(URI, {
   serverApi: {

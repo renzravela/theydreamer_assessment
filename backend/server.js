@@ -41,6 +41,7 @@ const startServer = async () => {
     await connect.connectToServer();
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
+      console.log('Please run the db_alter_coords.py');
     });
   } catch (error) {
     console.error(`Failed to start server: ${error.message}`);
